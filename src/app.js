@@ -867,7 +867,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Load latest configuration values
         if (settingAiEnabled) settingAiEnabled.checked = localStorage.getItem("SC_TOC_AI_ENABLED") === "true";
         if (settingGeminiKey) settingGeminiKey.value = localStorage.getItem("SC_TOC_GEMINI_KEY") || "";
-        if (settingAiModel) settingAiModel.value = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-2.5-flash";
+        if (settingAiModel) settingAiModel.value = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-flash-latest";
         
         settingsModal.classList.add("active");
       });
@@ -930,7 +930,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Check if Neural AI Bridge is active
         const aiEnabled = localStorage.getItem("SC_TOC_AI_ENABLED") === "true";
         const geminiKey = localStorage.getItem("SC_TOC_GEMINI_KEY");
-        const aiModel = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-2.5-flash";
+        const aiModel = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-flash-latest";
 
         if (aiEnabled && geminiKey) {
           // Auto-focus Active HUD Tab to show processing overlay
@@ -1008,7 +1008,10 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
                 },
                 generationConfig: {
                   temperature: 0.6,
-                  maxOutputTokens: 500
+                  maxOutputTokens: 1000,
+                  thinkingConfig: {
+                    thinkingBudget: 0
+                  }
                 }
               })
             });
@@ -1417,12 +1420,12 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
 
     function loadSavedState() {
       try {
-        // Auto-migrate legacy 1.5 models to 2.5 models
+        // Auto-migrate legacy models to production-grade latest models
         const storedModel = localStorage.getItem("SC_TOC_AI_MODEL");
-        if (storedModel === "gemini-1.5-flash") {
-          localStorage.setItem("SC_TOC_AI_MODEL", "gemini-2.5-flash");
-        } else if (storedModel === "gemini-1.5-pro") {
-          localStorage.setItem("SC_TOC_AI_MODEL", "gemini-2.5-pro");
+        if (storedModel === "gemini-1.5-flash" || storedModel === "gemini-2.5-flash") {
+          localStorage.setItem("SC_TOC_AI_MODEL", "gemini-flash-latest");
+        } else if (storedModel === "gemini-1.5-pro" || storedModel === "gemini-2.5-pro") {
+          localStorage.setItem("SC_TOC_AI_MODEL", "gemini-pro-latest");
         }
 
         // Load historical logbook
