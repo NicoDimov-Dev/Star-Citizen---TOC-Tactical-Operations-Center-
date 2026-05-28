@@ -951,10 +951,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check if Neural AI Bridge is active
         const aiEnabled = localStorage.getItem("SC_TOC_AI_ENABLED") === "true";
-        const geminiKey = localStorage.getItem("SC_TOC_GEMINI_KEY");
+        const geminiKey = (localStorage.getItem("SC_TOC_GEMINI_KEY") || "").trim();
         const aiModel = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-flash-latest";
 
+        console.log("SC-TOC: Submit handler entered. aiEnabled:", aiEnabled, "geminiKey length:", geminiKey.length, "aiModel:", aiModel);
+
         if (aiEnabled && geminiKey) {
+          console.log("SC-TOC: Neural AI Bridge is active. Initializing API call.");
           // Auto-focus Active HUD Tab to show processing overlay
           const hudTabBtn = document.querySelector('[data-tab="active-hud-tab"]');
           if (hudTabBtn) hudTabBtn.click();
@@ -977,27 +980,30 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           try {
-            const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a realistic, gritty, and narrative-driven tactical intelligence briefing (intel brief) for Captain Nico and his crew, explaining the "what" and "why" of their upcoming multi-phase deployment.
+            const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a realistic, gritty, and narrative-driven tactical intelligence briefing for Captain Nico and his crew.
 
-Write in a compelling, human, and cinematic tone reminiscent of a Tom Clancy military-thriller novel.
+Return your response strictly as a single, valid JSON object. Do NOT wrap the JSON in markdown code blocks, do not add any markdown backticks, and do not add any conversational text before or after the JSON.
 
-Follow these strict constraints:
-1. Tone & Voice: Highly professional, human, story-driven, realistic, and narrative. 
-   - Speak in a natural, gritty, first-person plural voice representing the "Intel Team" (using terms like "we've got," "our recon suggests," "we recommend").
-   - Do NOT write as a computer terminal, machine, or cold AI database. No brackets, no headers (like "[STRATEGIC OVERVIEW]" or "AEGIS TACTICAL SYSTEMS"), and no robotic/technical label filler.
-   - Avoid overly-complicated administrative jargon (e.g. do not say "systematic eradication of this cell to restore uninterrupted corporate transit"). Keep it sounding like real operators talking tactics.
-2. Narrative Connection (The Tom Clancy Hook):
-   - Hook the briefing with a realistic, narrative storyline based on the star system, sponsor, and threat. Introduce the briefing with a natural rumor, recon report, or sighting (e.g. "We've got a situation developing...", "A local independent freighter logged anomalous radar sigs...", "Our scouts spotted increased patrol signatures...").
-   - Connect the phases with organic, highly creative, and logical tactical justifications. Explain why one phase leads to the next (e.g. "hitting their active flight wing first in orbit cuts their escape vectors and blinds their warning sensors, giving your ground dropships a clean window to slip through their radar cover and clear the facility"). 
-   - AVOID formulaic phrasing like "In order to do B, we must first do A." Use organic tactical reasoning.
-3. No Gameplay Clashes (Strict Containment):
-   - Do NOT invent specific named NPCs, custom coordinates, or precise base names that aren't real.
-   - Never use fourth-wall breaking gaming terms like "FPS," "bunker," "dropdown," or "subterranean" (since ground facility locations could be surface outposts or stations). Keep it functional (e.g. "ground outpost," "facility," "hostile stronghold").
-4. Complication & ROE Integration:
-   - Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the brief as a natural tactical heads-up or advisory from the intel team (e.g. "Watch out for...", "Command is enforcing standard defensive rules, so...").
-5. Length: Keep the entire briefing tight, engaging, direct, and under 220 words.`;
+The JSON structure MUST follow this exact format:
+{
+  "briefing": "Cinematic, Tom Clancy style situational briefing. Use clear, high-impact tactical paragraph sections with HTML <br/> spacing. Break down the phases into a clean, bold bulleted list (e.g. using <strong>Phase 1: ...</strong>) for instant HUD scannability. Keep it highly narrative and immersive.",
+  "threatDetails": "Custom, realistic intel details about the hostiles and local tactical environment (under 25 words). Never invent specific named NPCs or custom coordinates.",
+  "insertionVector": "Custom recommended entry tactics and landing specifications (under 30 words). Keep it highly technical.",
+  "crewDirectives": [
+    "Custom crew roleplay directive for Phase 1",
+    "Custom crew roleplay directive for Phase 2 (add one for each phase requested)"
+  ]
+}
 
-            const promptText = `Generate the intel brief for:
+Follow these strict constraints for the content:
+1. Tone & Voice: Highly professional, human, story-driven, realistic, and narrative. Speak in a natural, gritty, first-person plural voice representing the "Intel Team" (e.g. "we've got," "our recon suggests," "we recommend"). Avoid overly-complicated administrative jargon.
+2. Variety & Creative Hooks: Randomize your narrative framing, hooks, and opening angles. Sometimes start with a scout report, sometimes with a decoded emergency signal, sometimes with a corporate bounty posting, and sometimes with a direct military SITREP.
+3. Narrative Connection (No Formulaic Phrases): Connect the phases with organic, highly creative, and logical tactical justifications. Strictly AVOID formulaic phrasing like "In order to do B, we must first do A."
+4. No Gameplay Clashing Details: Do NOT invent specific named NPCs, custom coordinates, or precise base names. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean." Keep ground locations referred to as "outposts," "facilities," or "strongholds."
+5. Complication & ROE Integration: Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the "briefing" text as a natural tactical heads-up from the intel team.
+6. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).`;
+
+            const promptText = `Generate the intel JSON dossier for:
 - Operation Codename: "${codename}"
 - Sector: "${system}"
 - Sponsoring Client: "${sponsor}"
@@ -1008,6 +1014,7 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
 - Rules of Engagement: "${briefing.roe}"
 `;
 
+            console.log("SC-TOC: Requesting Gemini API with prompt length:", promptText.length);
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${geminiKey}`, {
               method: "POST",
               headers: {
@@ -1035,49 +1042,64 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
               })
             });
 
+            console.log("SC-TOC: Gemini response received. status:", response.status, "ok:", response.ok);
+
             if (!response.ok) {
               throw new Error(`Gemini API HTTP Error: status ${response.status}`);
             }
 
             const data = await response.json();
-            if (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
-              const rawText = data.candidates[0].content.parts[0].text.trim();
-              
-              // Strip potential markdown blocks
-              let cleanedText = rawText;
-              if (cleanedText.startsWith("```json")) {
-                cleanedText = cleanedText.substring(7);
-              }
-              if (cleanedText.endsWith("```")) {
-                cleanedText = cleanedText.substring(0, cleanedText.length - 3);
-              }
-              cleanedText = cleanedText.trim();
+            
+            if (data && data.error) {
+              throw new Error(`Gemini API Error: ${data.error.message || data.error.status}`);
+            }
 
-              const parsedJSON = JSON.parse(cleanedText);
-              
-              if (parsedJSON.briefing) {
-                briefing.speechToCrew = parsedJSON.briefing;
-              }
-              if (parsedJSON.threatDetails) {
-                briefing.threatDetails = parsedJSON.threatDetails;
-              }
-              if (parsedJSON.insertionVector) {
-                briefing.insertionVector = parsedJSON.insertionVector;
-                briefing.gearsList = `Tactical gear spec: ${briefing.threatArmor}. Recommended entry tactics: ${parsedJSON.insertionVector}`;
-              }
-              if (parsedJSON.crewDirectives && Array.isArray(parsedJSON.crewDirectives)) {
-                briefing.phasesRP = parsedJSON.crewDirectives.map((directive, index) => ({
-                  phaseNum: index + 1,
-                  rule: directive
-                }));
-              }
+            if (!data || !data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts[0]) {
+              throw new Error("Gemini API returned an empty or invalid response structure.");
+            }
+
+            const rawText = data.candidates[0].content.parts[0].text.trim();
+            console.log("SC-TOC: Raw response text fetched successfully. Length:", rawText.length);
+            
+            // Strip potential markdown blocks
+            let cleanedText = rawText;
+            if (cleanedText.startsWith("```json")) {
+              cleanedText = cleanedText.substring(7);
+            }
+            if (cleanedText.endsWith("```")) {
+              cleanedText = cleanedText.substring(0, cleanedText.length - 3);
+            }
+            cleanedText = cleanedText.trim();
+
+            const parsedJSON = JSON.parse(cleanedText);
+            console.log("SC-TOC: Parsed JSON successfully:", parsedJSON);
+            
+            if (parsedJSON.briefing) {
+              briefing.speechToCrew = parsedJSON.briefing;
+            } else {
+              console.warn("SC-TOC: Parsed JSON is missing the 'briefing' key.");
+            }
+            if (parsedJSON.threatDetails) {
+              briefing.threatDetails = parsedJSON.threatDetails;
+            }
+            if (parsedJSON.insertionVector) {
+              briefing.insertionVector = parsedJSON.insertionVector;
+              briefing.gearsList = `Tactical gear spec: ${briefing.threatArmor}. Recommended entry tactics: ${parsedJSON.insertionVector}`;
+            }
+            if (parsedJSON.crewDirectives && Array.isArray(parsedJSON.crewDirectives)) {
+              briefing.phasesRP = parsedJSON.crewDirectives.map((directive, index) => ({
+                phaseNum: index + 1,
+                rule: directive
+              }));
             }
           } catch (apiErr) {
-            console.error("Gemini AI bridge compilation failed, reverting to local static compiler.", apiErr);
-            briefing.speechToCrew = `"[System Alert: Secure comms link degraded. Reverting to local static command grids.]" <br/><br/> ${briefing.speechToCrew}`;
+            console.error("SC-TOC: Gemini AI bridge compilation failed, reverting to local static compiler.", apiErr);
+            briefing.speechToCrew = `"[System Alert: Secure comms link degraded. Reverting to local static command grids. Error: ${apiErr.message}]" <br/><br/> ${briefing.speechToCrew}`;
           } finally {
             if (loader) loader.remove();
           }
+        } else {
+          console.log("SC-TOC: Neural AI Bridge is OFFLINE or key is missing. Using local static engine.");
         }
 
         // Save Active Operation State
