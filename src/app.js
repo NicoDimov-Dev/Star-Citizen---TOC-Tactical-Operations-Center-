@@ -12,37 +12,49 @@ document.addEventListener("DOMContentLoaded", () => {
     const SC_CONTRACTS = [
       {
         id: "combat_bounty",
-        type: "Ship Bounty (Space Combat)",
+        type: "Ship Bounty (Combat)",
         title: "Space Bounty: Neutralize Active Flight Wing",
         description: "Intercept and eliminate an active flight wing blockading local sectors or harassing shipping lanes. Be prepared to engage multiple fighter classes in zero-g ship combat."
       },
       {
         id: "fps_clearance",
-        type: "FPS Assault (Bunker / Outpost)",
+        type: "FPS Assault (Combat)",
         title: "FPS Clearance: Sweep and Secure Facility Perimeter",
         description: "Infiltrate a hostile-controlled ground facility, bunker, or outpost. Conduct a full tactical sweep of all interior levels to neutralize defensive sentries and secure the perimeter."
       },
       {
         id: "fps_investigation",
-        type: "FPS Investigation (Data / Intel)",
+        type: "FPS Investigation (Intel)",
         title: "FPS Investigation: Recover Restricted Flight Intel",
         description: "Deploy to a crash site or derelict structure. Conduct search operations to recover black box flight logs, decrypt active terminal databanks, or upload vital telemetry files to Command."
       },
       {
         id: "cargo_hauling",
-        type: "Hauling & Logistics (Cargo Transport)",
+        type: "Hauling & Logistics",
         title: "Hauling Operations: Transport Tactical Supplies",
         description: "Load and secure cargo grids with critical logistical crates or industrial trade commodities. Safely transport and deposit the cargo at designated security drop-points."
       },
       {
+        id: "mining",
+        type: "Mining & Harvesting",
+        title: "Mining Operations: Extract Volatile Mineral Ore",
+        description: "Deploy to a designated moon surface or asteroid belt. Utilize mining lasers to fracture deposits, filter raw ore, and secure high-value industrial materials."
+      },
+      {
         id: "industrial_salvage",
-        type: "Industrial Salvage / Hull Scraping",
+        type: "Industrial Salvage",
         title: "Industrial Salvage: Reclaim Wreck Plating and Cargo",
         description: "Deploy to a designated ship wreck sector. Utilize hull scraping and structural fracturing lasers to process hull plating, and secure internal components from the wreckage."
       },
       {
+        id: "refueling",
+        type: "Refueling & Support",
+        title: "Refueling Mission: Supply Fleet Starfarer Tanks",
+        description: "Deploy to assist stranded civilian or security vessels in orbit. Connect docking collars to transfer premium hydrogen or quantum fuel grids under tactical conditions."
+      },
+      {
         id: "special_ops",
-        type: "Special Operations (Major Fleet/Event)",
+        type: "Special Operations (Fleet)",
         title: "Special Operations: Capital Blockade Break",
         description: "Engage in a major strategic fleet defense, dynamic sector raid, or capital ship defense. Requires heavy tactical armor, multi-crew flight grids, and high-intensity fire support."
       }
@@ -52,6 +64,49 @@ document.addEventListener("DOMContentLoaded", () => {
       "Stanton": ["Hurston", "Crusader", "ArcCorp", "microTech"],
       "Pyro": ["Pyro I", "Pyro II", "Pyro III", "Pyro IV", "Pyro V", "Pyro VI", "Ruin Station"],
       "Nyx": ["Delamar", "Levski", "Nyx I", "Nyx II", "Nyx III"]
+    };
+
+    const SC_SETTINGS_MAP = {
+      "combat_bounty": [
+        "Atmospheric Patrol (Planet/moon flight intercepts)",
+        "Orbital Intercept (Space combat around stations/beacons)",
+        "Deep Space Capital Engagement (VHRT/ERTs, fleet battles)"
+      ],
+      "fps_clearance": [
+        "Subterranean Bunker Sweep (Bunkers, underground facilities)",
+        "Surface Outpost Assault (Outposts, surface strongholds)",
+        "Orbital Station / Ship Boarding (Lagrange stations, heavy derelict ships)"
+      ],
+      "fps_investigation": [
+        "Shipwreck Black Box Recovery (Crash sites, search areas)",
+        "Secure Data Terminal Decrypt (Server rooms, terminal uploads)",
+        "Outpost Sector Survey (Specimen search, specimen retrieval, harvestables)"
+      ],
+      "cargo_hauling": [
+        "Local / Intra-Planet Haul (Moons and orbital stations)",
+        "Stellar / Intra-System Haul (Between planets in the active system)",
+        "Interstellar / Cross-System Haul (Long distance travel between systems)"
+      ],
+      "mining": [
+        "Moon Surface Mining / Prospecting (Prospector, ROC, ground rock cracking)",
+        "Asteroid Belt Rock-Cracking (Space belt mining, deep space fields)",
+        "Refinery Processing & Transport (Refined logistics runs, depot drops)"
+      ],
+      "industrial_salvage": [
+        "Hull Scraping & RMC Processing (Scraping hulls, processing canisters)",
+        "Structural Fracturing & Extraction (Dismantling massive hulls)",
+        "Derelict Component Harvesting (Recovering sub-systems and rare grids)"
+      ],
+      "refueling": [
+        "Lagrange Station Supply Run (Fuel cargo hauling)",
+        "Sector Distress Beacon Assist (Emergency space refueling)",
+        "Combat Fleet Wing Support (Active in-flight combat refueling)"
+      ],
+      "special_ops": [
+        "Joint Taskforce Capital Assault (Striking capital dreadnoughts)",
+        "Strategic Comm-Array Defense (Securing comm arrays)",
+        "High-Alert Sector Blockade Break (Infiltrating blockaded territory)"
+      ]
     };
 
     // ==========================================
@@ -559,7 +614,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function randomizeCodename() {
       if (codenameInput) {
         if (activeCampaign && activeCampaign.active) {
-          codenameInput.value = `Operation ${activeCampaign.name.replace("Campaign ", "")} ${activeCampaign.stats.completed + 1}`;
+          const nextOpNum = activeCampaign.stats.completed + 1;
+          const campaignSuffix = activeCampaign.name.replace("Campaign ", "");
+          if (activeCampaign.stats.completed > 0) {
+            const prefix = activeCampaign.lastOpOutcome === "FAILED" ? "Operation Retaliation - " : "Operation Vanguard - ";
+            codenameInput.value = `${prefix}${campaignSuffix} ${nextOpNum}`;
+          } else {
+            codenameInput.value = `Operation ${campaignSuffix} ${nextOpNum}`;
+          }
         } else {
           codenameInput.value = generateCodename();
         }
@@ -583,6 +645,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const numPhases = parseInt(scaleSelect.value);
       phaseBuilderContainer.innerHTML = "";
 
+      // Check campaign outcomes for defaults
+      let defaultPhase1Career = null;
+      if (activeCampaign && activeCampaign.active && activeCampaign.stats.completed > 0) {
+        if (activeCampaign.lastOpOutcome === "FAILED") {
+          // pre-select threat selector to High
+          if (threatSelect) {
+            threatSelect.value = "High";
+          }
+          // Default Phase 1 to fps_investigation or combat_bounty
+          defaultPhase1Career = Math.random() > 0.5 ? "fps_investigation" : "combat_bounty";
+        } else if (activeCampaign.lastOpOutcome === "SUCCESS") {
+          // Default Phase 1 to cargo_hauling or industrial_salvage
+          defaultPhase1Career = Math.random() > 0.5 ? "cargo_hauling" : "industrial_salvage";
+        }
+      }
+
       for (let i = 1; i <= numPhases; i++) {
         const phaseDiv = document.createElement("div");
         phaseDiv.className = `phase-builder-item ${i === 1 ? 'active' : ''}`;
@@ -592,30 +670,68 @@ document.addEventListener("DOMContentLoaded", () => {
         phaseTag.textContent = `PHASE 0${i}`;
         phaseDiv.appendChild(phaseTag);
 
-        const formGroup = document.createElement("div");
-        formGroup.className = "form-group";
-        formGroup.style.margin = "0";
+        // Column 1: Career Focus
+        const formGroup1 = document.createElement("div");
+        formGroup1.className = "form-group";
+        formGroup1.style.margin = "0";
 
-        const select = document.createElement("select");
-        select.id = `phase-select-${i}`;
-        select.className = "phase-dropdown-select";
+        const select1 = document.createElement("select");
+        select1.id = `phase-select-${i}`;
+        select1.className = "phase-dropdown-select";
 
         SC_CONTRACTS.forEach(c => {
           const option = document.createElement("option");
           option.value = c.id;
           option.textContent = c.type;
-          select.appendChild(option);
+          select1.appendChild(option);
         });
 
-        // Default variety selection
-        const allSelectOptions = select.querySelectorAll("option");
-        if (allSelectOptions.length > 0) {
-          const randIndex = Math.floor(Math.random() * allSelectOptions.length);
-          allSelectOptions[randIndex].selected = true;
+        // Set default value
+        if (i === 1 && defaultPhase1Career) {
+          select1.value = defaultPhase1Career;
+        } else {
+          // Default variety selection
+          const allSelectOptions = select1.querySelectorAll("option");
+          if (allSelectOptions.length > 0) {
+            const randIndex = Math.floor(Math.random() * allSelectOptions.length);
+            allSelectOptions[randIndex].selected = true;
+          }
         }
 
-        formGroup.appendChild(select);
-        phaseDiv.appendChild(formGroup);
+        formGroup1.appendChild(select1);
+        phaseDiv.appendChild(formGroup1);
+
+        // Column 2: Setting & Scope
+        const formGroup2 = document.createElement("div");
+        formGroup2.className = "form-group";
+        formGroup2.style.margin = "0";
+
+        const select2 = document.createElement("select");
+        select2.id = `phase-setting-select-${i}`;
+        select2.className = "phase-setting-select";
+
+        formGroup2.appendChild(select2);
+        phaseDiv.appendChild(formGroup2);
+
+        // Function to populate Settings based on Career
+        const populateSettings = () => {
+          const careerId = select1.value;
+          select2.innerHTML = "";
+          const settings = SC_SETTINGS_MAP[careerId] || [];
+          settings.forEach(setting => {
+            const option = document.createElement("option");
+            option.value = setting;
+            option.textContent = setting;
+            select2.appendChild(option);
+          });
+        };
+
+        // Populate initially
+        populateSettings();
+
+        // Bind listener
+        select1.addEventListener("change", populateSettings);
+
         phaseBuilderContainer.appendChild(phaseDiv);
       }
     }
@@ -799,6 +915,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const isClimax = (i === numPhases - 1);
         
         timeline += `<p><strong>Phase 0${i + 1}: ${current.title}</strong><br/>`;
+        if (current.setting) {
+          timeline += `<em>Setting & Scope:</em> ${current.setting}<br/>`;
+        }
         
         if (isClimax) {
           timeline += `<em>Tactical Justification:</em> **PRIMARY OBJECTIVE (CLIMAX)**. This represents the ultimate goal of the operation. All preceding enablers lead directly to securing this sector vector.<br/>`;
@@ -929,12 +1048,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const selectedPhases = [];
         for (let i = 1; i <= numPhases; i++) {
           const select = document.getElementById(`phase-select-${i}`);
+          const settingSelect = document.getElementById(`phase-setting-select-${i}`);
           if (select) {
             const contractId = select.value;
             const contract = SC_CONTRACTS.find(c => c.id === contractId);
             if (contract) {
               selectedPhases.push({
                 ...contract,
+                setting: settingSelect ? settingSelect.value : "",
                 status: "PENDING"
               });
             }
@@ -980,7 +1101,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           try {
-            const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a realistic, gritty, and narrative-driven tactical intelligence briefing for Captain Nico and his crew.
+            const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a realistic, gritty, and narrative-driven tactical intelligence briefing for the Captain and his crew.
 
 Return your response strictly as a single, valid JSON object. Do NOT wrap the JSON in markdown code blocks, do not add any markdown backticks, and do not add any conversational text before or after the JSON.
 
@@ -1005,7 +1126,8 @@ Follow these strict constraints for the content:
    - If the Previous Operation Outcome was "FAILED", write a briefing that treats this as a critical recovery, reinforcement, or high-stakes retaliation sweep to regain control and stabilize the sector after our setback in the previous operation (mentioning its codename).
 5. No Gameplay Clashing Details: Do NOT invent specific named NPCs, custom coordinates, or precise base names. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean." Keep ground locations referred to as "outposts," "facilities," or "strongholds."
 6. Complication & ROE Integration: Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the "briefing" text as a natural tactical heads-up from the intel team.
-7. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).`;
+7. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).
+8. Strict Name Agnosticism: Never refer to the user or player as "Nico" or "Captain Nico". Always refer to the user as "the Captain" or "the Commander" to maintain complete roleplay name agnosticism.`;
 
             let campaignBlock = "";
             if (activeCampaign && activeCampaign.active) {
@@ -1028,7 +1150,7 @@ Follow these strict constraints for the content:
 - Sponsoring Client: "${sponsor}"
 - Threat Profile: "${threat} (${briefing.threatDetails})"
 ${campaignBlock}- Mission Flow:
-${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (${p.description})`).join("\n")}
+${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (${p.description}) with setting/scope "${p.setting}"`).join("\n")}
 - Complication Parameter: "${briefing.complication}"
 - Rules of Engagement: "${briefing.roe}"
 `;
