@@ -1,0 +1,54 @@
+{
+  "UUID": "4f14f756-1e4f-15ad-1426-61e50e2621a8",
+  "Type": "ContractGeneratorHandler_TutorialSeriesDef",
+  "MissionType": {
+    "UUID": "9c585972-95b7-4408-ad72-aa9858545958",
+    "Name": "Priority"
+  },
+  "MissionGiver": "How to Play Guide",
+  "Title": "Tutorial - Your First Flight",
+  "Description": "You’re almost through with the tutorial. All that remains is to take flight!\n\nWith your business in ~mission(Location|Name) finished, it’s time to leave the city – and eventually the planet. Make your way to the ~mission(TransitNameShort) transit shuttles. These shuttles can take you all around ~mission(Location|Name) – but your destination is the spaceport, where an Anvil C8 Pisces has been temporarily provided for you.\n\nThis snub scouting ship is a great starter vessel, perfect for new pilots looking to get their wings.",
+  "LocationPools": {
+    "MissionLocationBP": {
+      "Purpose": "Location",
+      "ResolvedLocations": []
+    },
+    "SpaceportLocationBP": {
+      "ResolvedLocations": []
+    },
+    "EndingLocationBP": {
+      "Purpose": "Destination",
+      "ResolvedLocations": []
+    }
+  },
+  "HaulingOrders": [],
+  "Prerequisites": [],
+  "AvailabilityLocations": [],
+  "Shareable": false,
+  "Illegal": false,
+  "OnceOnly": true,
+  "MaxPlayersPerInstance": 1,
+  "ReacceptAfterAbandoning": false,
+  "ReacceptAfterFailing": false,
+  "Cooldown": {
+    "AbandonedSeconds": 1,
+    "AbandonedVariationSeconds": 1,
+    "PersonalSeconds": 1,
+    "PersonalVariationSeconds": 1
+  },
+  "AvailableInPrison": false,
+  "FailIfBecameCriminal": false,
+  "GeneratorClass": "Tutorial_Generator_TEMPLATE",
+  "NotForRelease": false,
+  "WorkInProgress": false,
+  "Lifetime": {
+    "RespawnTime": 5,
+    "RespawnTimeVariation": 2,
+    "MaxInstances": 1,
+    "MaxInstancesPerPlayer": -1
+  },
+  "Combat": [],
+  "EntitySpawns": [],
+  "Difficulty": [],
+  "entry_type": "contracts"
+}

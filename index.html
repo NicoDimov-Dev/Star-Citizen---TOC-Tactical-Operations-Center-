@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Star Citizen Tactical Operations Center (SC-TOC)</title>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <!-- Cybernetic Hologram sweep effect -->
+  <div class="hologram-line"></div>
+
+  <div class="app-container">
+    <!-- Header with dynamic telemetry metrics -->
+    <header>
+      <div class="brand-section">
+        <span class="brand-icon">🛡️</span>
+        <div class="brand-title">
+          <h1>SC-TOC</h1>
+          <span>Tactical Operations Center // RP Wrapper Framework</span>
+        </div>
+      </div>
+      
+      <div class="hud-telemetry">
+        <div class="telemetry-item">
+          <span class="telemetry-label">Commander</span>
+          <span class="telemetry-val">CAPT. NICO</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Status</span>
+          <span class="telemetry-val">COMBAT READY</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Sub-System</span>
+          <span class="telemetry-val accent">AEGIS NET v4.9</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="telemetry-label">Local Chronometer</span>
+          <span class="telemetry-val" id="hud-clock">02:18:15</span>
+        </div>
+        <div class="telemetry-item" style="cursor: pointer; background: rgba(254, 161, 0, 0.05); border: 1px dashed rgba(254, 161, 0, 0.3);" id="btn-open-settings">
+          <span class="telemetry-label" style="color: var(--color-primary);">System Config</span>
+          <span class="telemetry-val" style="display: flex; align-items: center; gap: 4px;">⚙️ CONFIG</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+      <!-- Panel 1: Operational Planner Deck (Left) -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🛡️ Planner Deck</div>
+          <span class="panel-sub">SECURE LINE</span>
+        </div>
+        <div class="panel-body">
+          <!-- Campaign Deck Switch & Interface -->
+          <div class="campaign-deck-wrapper" style="margin-bottom: 20px; border-bottom: 1px solid rgba(254, 161, 0, 0.15); padding-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span style="font-family: var(--font-header); font-size: 13px; color: var(--color-primary); letter-spacing: 1px;">🛡️ CAMPAIGN CONTROL DECK</span>
+              <button class="btn btn-secondary btn-mini" id="btn-toggle-campaign-view" style="width: auto; padding: 2px 8px; font-size: 10px;">📊 Expand Control</button>
+            </div>
+
+            <!-- Campaign Status Sub-Banner -->
+            <div id="campaign-status-banner" style="background: rgba(254, 161, 0, 0.03); border: 1px solid rgba(254, 161, 0, 0.2); padding: 8px 12px; font-family: var(--font-console); font-size: 11px; color: var(--color-text-muted); display: flex; justify-content: space-between; border-radius: 2px;">
+              <span>Status: <strong style="color: var(--color-text-muted);" id="campaign-status-text">OFFLINE</strong></span>
+              <span id="campaign-progress-text">-</span>
+            </div>
+
+            <!-- Expandable Campaign Panel -->
+            <div id="campaign-setup-panel" style="display: none; margin-top: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(254, 161, 0, 0.1); padding: 12px; border-radius: 2px;">
+              <div id="campaign-setup-form-group">
+                <div class="form-group">
+                  <label for="campaign-name-input" style="font-size: 11px;">Campaign Codename</label>
+                  <input type="text" id="campaign-name-input" placeholder="e.g. Campaign Horizon Aegis" style="padding: 6px; font-size: 11px;">
+                </div>
+                <div class="form-group" style="margin-top: 8px;">
+                  <label for="campaign-length-select" style="font-size: 11px;">Campaign Duration (Operations)</label>
+                  <select id="campaign-length-select" style="padding: 6px; font-size: 11px;">
+                    <option value="3">3 Operations (Tactical Deployment)</option>
+                    <option value="5">5 Operations (Extended Campaign)</option>
+                  </select>
+                </div>
+                <button type="button" class="btn btn-mini" id="btn-commission-campaign" style="margin-top: 8px; width: 100%;">🛡️ Commission Campaign</button>
+              </div>
+              
+              <div id="campaign-active-controls" style="display: none; text-align: center;">
+                <p style="font-size: 11px; color: var(--color-primary); font-family: var(--font-console); margin-bottom: 8px;" id="campaign-active-title">Campaign Horizon Aegis</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; font-size: 10px; font-family: var(--font-console); color: var(--color-text-muted);">
+                  <div style="border: 1px solid rgba(254, 161, 0, 0.15); padding: 4px;">Ops Succeed: <span id="campaign-stat-success" style="color: var(--color-primary); font-weight: bold;">0</span></div>
+                  <div style="border: 1px solid rgba(254, 161, 0, 0.15); padding: 4px;">Ops Failed: <span id="campaign-stat-failed" style="color: var(--color-danger); font-weight: bold;">0</span></div>
+                </div>
+                <button type="button" class="btn btn-mini btn-danger" id="btn-retire-campaign" style="width: 100%;">⚠️ Decommission Campaign</button>
+              </div>
+            </div>
+          </div>
+
+          <form id="planner-form">
+            <!-- Codename Generator -->
+            <div class="form-group">
+              <label for="op-codename">Operation Codename</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="op-codename" placeholder="e.g. Operation Onyx Dawn" required>
+                <button type="button" class="btn btn-secondary btn-mini" id="btn-rand-codename" style="width: auto;">🎲 Rand</button>
+              </div>
+            </div>
+
+            <!-- Jurisdiction System -->
+            <div class="form-group">
+              <label for="op-system">Operational Star System</label>
+              <select id="op-system">
+                <option value="Stanton">Stanton (UEE Protected)</option>
+                <option value="Pyro">Pyro (Unclaimed/Outlaw)</option>
+                <option value="Nyx">Nyx (Independent)</option>
+              </select>
+            </div>
+
+            <!-- Scale / Chain Length -->
+            <div class="form-group">
+              <label for="op-scale">Operational Scale (Chain Length)</label>
+              <select id="op-scale">
+                <option value="2">2 Phases (Standard Patrol)</option>
+                <option value="3" selected>3 Phases (Full Operation)</option>
+                <option value="4">4 Phases (Heavy Strategic Campaign)</option>
+              </select>
+            </div>
+
+            <!-- Threat Assessment -->
+            <div class="form-group">
+              <label for="op-threat">Threat Assessment Level</label>
+              <select id="op-threat">
+                <option value="Low">Low (Security Green)</option>
+                <option value="Medium" selected>Medium (Security Amber)</option>
+                <option value="High">High (Security Red)</option>
+                <option value="Extreme">Extreme (Security Black)</option>
+              </select>
+            </div>
+
+            <!-- Faction Giver -->
+            <div class="form-group">
+              <label for="op-sponsor">Sponsoring Syndicate / PMC Client</label>
+              <select id="op-sponsor">
+                <option value="PMC Command">Private Military Command (In-house)</option>
+                <option value="Bounty Hunters Guild">Bounty Hunters Guild</option>
+                <option value="Civilian Defense Force">CDF (Civilian Defense Force)</option>
+                <option value="United Earth Empire Security">UEE Imperial Security</option>
+                <option value="NineTails Syndicate">NineTails Syndicate (Outlaw)</option>
+                <option value="Arccorp Security Division">ArcCorp Security</option>
+                <option value="microTech Protection Services">microTech Protection</option>
+              </select>
+            </div>
+
+            <!-- Dynamic Phase dropdowns (populated by app.js) -->
+            <div class="form-group" style="margin-top: 10px;">
+              <label>Tactical Phase Configurations</label>
+              <div class="mission-phase-builder" id="phase-builder-container">
+                <!-- Dynamically built lists of dropdowns -->
+              </div>
+            </div>
+
+            <button type="submit" class="btn" style="margin-top: 15px;">🛡️ Assemble Tactical Operation</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Panel 2: Tactical HUD & Operational Logs (Right) -->
+      <section class="panel" style="grid-column: span 1;">
+        <!-- Tabs headers -->
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="active-hud-tab">🎯 Active Operation HUD</button>
+          <button class="tab-btn" data-tab="logbook-tab">🗂️ Historical Logs</button>
+        </div>
+
+        <div class="panel-body" style="padding: 0; background: rgba(0,0,0,0.15);">
+          <!-- Tab 1: Active HUD View -->
+          <div class="tab-content active" id="active-hud-tab">
+            <div class="hud-empty" id="hud-empty-state">
+              <span class="empty-icon">🛡️</span>
+              <h3>No Active Tactical Operations</h3>
+              <p>Formulate a multi-phase operational contract in the Planner Deck (Left) and select "Assemble" to lock in telemetry and narrative bridges.</p>
+            </div>
+
+            <div class="hud-view" id="hud-active-state" style="display: none; padding: 20px; overflow-y: auto;">
+              <!-- Banner -->
+              <div class="operation-banner" id="banner-container">
+                <div>
+                  <div class="banner-codename" id="hud-op-name">Operation Crimson Bastion</div>
+                  <div class="banner-subtitle" id="hud-op-subtitle">Stanton Sector // Verified Sponsoring Client: CDF</div>
+                </div>
+                <div class="progress-tracker">
+                  <div class="progress-labels">
+                    <span>OP Progress</span>
+                    <span id="hud-op-progress-pct">33%</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="hud-op-progress-bar"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Grid content split: Briefing (Left inside grid) and Checklist (Right inside grid) -->
+              <div class="hud-content">
+                <!-- Immersive Briefing Board -->
+                <div class="briefing-board">
+                  <div class="crew-briefing-scroll">
+                    <!-- Address box for captain reading aloud to crew -->
+                    <div class="briefing-address-box">
+                      <p class="briefing-speech" id="brief-speech-text">
+                        "Listen up, crew. Command has finalized our flight plan for..."
+                      </p>
+                    </div>
+
+                    <!-- Briefing grids -->
+                    <div class="briefing-grid">
+                      <div class="brief-card">
+                        <div class="brief-card-title">⚠️ Threat Assessment</div>
+                        <div class="brief-card-body" id="brief-threat-body">
+                          <strong>Level:</strong> Security Amber (Moderate)<br/>
+                          <strong>Expected Units:</strong> NineTails squads / local pirates.
+                        </div>
+                      </div>
+
+                      <div class="brief-card">
+                        <div class="brief-card-title">📦 Logistical Directives</div>
+                        <div class="brief-card-body" id="brief-logistics-body">
+                          <strong>Entry:</strong> Low altitude radar avoidance drop.<br/>
+                          <strong>Gear Spec:</strong> Medium tactical combat suites.
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Connective Timeline narrative -->
+                    <div class="narrative-narrative">
+                      <div class="narrative-title">📋 Chronological Flight Sequence</div>
+                      <div class="narrative-text" id="brief-timeline-html">
+                        <!-- Loaded dynamically -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chained checklist panel -->
+                <div class="phases-checklist" id="hud-phases-checklist-container">
+                  <!-- Dynamically populated phase checklist card elements -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Historical Logs View -->
+          <div class="tab-content" id="logbook-tab" style="padding: 20px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <div>
+                <h3 style="font-family: var(--font-header); letter-spacing: 1px; color: var(--color-primary);">Operations History Logbook</h3>
+                <p style="font-size: 11px; color: var(--color-text-muted);">Local records of completed multi-phase tactical operations.</p>
+              </div>
+              <button class="btn btn-danger btn-mini" id="btn-clear-history" style="width: auto;">⚠️ Purge Archives</button>
+            </div>
+            
+            <div id="logbook-empty" style="text-align: center; color: var(--color-text-muted); padding: 40px; font-family: var(--font-console);">
+              🔒 Archives empty. Complete active operations to store historical briefings.
+            </div>
+
+            <div id="logbook-table-container" style="display: none;">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Date/Timestamp</th>
+                    <th>Codename</th>
+                    <th>System</th>
+                    <th>Scale</th>
+                    <th>Outcome</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="logbook-tbody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Settings Modal Overlay -->
+  <div id="settings-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content" style="background: var(--color-bg); border: 1px solid var(--color-primary); padding: 30px; border-radius: 4px; width: 90%; max-width: 500px; box-shadow: 0 0 25px rgba(254, 161, 0, 0.25); font-family: var(--font-console); position: relative;">
+      <div class="panel-header" style="margin-bottom: 20px; border-bottom: 1px solid rgba(254, 161, 0, 0.15); padding-bottom: 10px;">
+        <div class="panel-title" style="color: var(--color-primary); font-family: var(--font-header); letter-spacing: 1px;">⚙️ AEGIS SYSTEM CONFIGURATION</div>
+        <span class="panel-sub" style="font-size: 9px; color: var(--color-text-muted);">SECURE LOCAL TERMINAL BRIDGE</span>
+      </div>
+      
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--color-text);">
+          <input type="checkbox" id="setting-ai-enabled" style="width: auto; cursor: pointer; margin: 0;">
+          <span style="font-weight: bold;">Enable Neural AI Briefing Wrapper</span>
+        </label>
+        <span class="form-help" style="font-size: 10px; color: var(--color-text-muted); display: block; margin-top: 4px; line-height: 1.4; padding-left: 20px;">
+          Toggles Google Gemini cognitive synthesis. When enabled, your operation addresses are generated in real-time, completely bypassing static connections.
+        </span>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label for="setting-gemini-key" style="font-size: 11px; display: block; margin-bottom: 6px; color: var(--color-primary);">Google Gemini API Key</label>
+        <input type="password" id="setting-gemini-key" placeholder="AIzaSy... (Saved locally in your browser)" style="font-family: var(--font-console); font-size: 11px; padding: 8px; width: 100%; border: 1px solid rgba(254, 161, 0, 0.3); background: rgba(0,0,0,0.3); color: var(--color-primary); border-radius: 2px;">
+        <span class="form-help" style="font-size: 10px; color: var(--color-text-muted); display: block; margin-top: 4px; line-height: 1.4;">
+          Your key never leaves this device and is stored strictly in your browser's private localStorage. Grab a **free** API key in seconds from the <a href="https://aistudio.google.com/" target="_blank" style="color: var(--color-primary); text-decoration: underline; font-weight: bold;">Google AI Studio Console</a>.
+        </span>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="setting-ai-model" style="font-size: 11px; display: block; margin-bottom: 6px; color: var(--color-primary);">Active Intelligence Model</label>
+        <select id="setting-ai-model" style="font-family: var(--font-console); font-size: 11px; padding: 8px; width: 100%; border: 1px solid rgba(254, 161, 0, 0.3); background: rgba(0,0,0,0.3); color: var(--color-primary); border-radius: 2px;">
+          <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Recommended - Free, Fast, Cinematic)</option>
+          <option value="gemini-1.5-pro">Gemini 1.5 Pro (Extreme high-fidelity cognitive reasoner)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid rgba(254, 161, 0, 0.15); padding-top: 15px;">
+        <button class="btn btn-secondary" id="btn-close-settings" style="width: auto; padding: 6px 15px; font-size: 11px; border-color: rgba(254, 161, 0, 0.3);">✕ CANCEL</button>
+        <button class="btn" id="btn-save-settings" style="width: auto; padding: 6px 20px; font-size: 11px;">🛡️ SAVE CONFIG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="src/app.js"></script>
+</body>
+</html>
