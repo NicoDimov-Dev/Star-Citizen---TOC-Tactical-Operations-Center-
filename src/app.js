@@ -999,16 +999,35 @@ Follow these strict constraints for the content:
 1. Tone & Voice: Highly professional, human, story-driven, realistic, and narrative. Speak in a natural, gritty, first-person plural voice representing the "Intel Team" (e.g. "we've got," "our recon suggests," "we recommend"). Avoid overly-complicated administrative jargon.
 2. Variety & Creative Hooks: Randomize your narrative framing, hooks, and opening angles. Sometimes start with a scout report, sometimes with a decoded emergency signal, sometimes with a corporate bounty posting, and sometimes with a direct military SITREP.
 3. Narrative Connection (No Formulaic Phrases): Connect the phases with organic, highly creative, and logical tactical justifications. Strictly AVOID formulaic phrasing like "In order to do B, we must first do A."
-4. No Gameplay Clashing Details: Do NOT invent specific named NPCs, custom coordinates, or precise base names. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean." Keep ground locations referred to as "outposts," "facilities," or "strongholds."
-5. Complication & ROE Integration: Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the "briefing" text as a natural tactical heads-up from the intel team.
-6. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).`;
+4. Campaign & Narrative Continuity: If the prompt includes "Campaign Context", you MUST organically weave this history into the briefing's introductory paragraph:
+   - If Deployment Status is "Operation 1 of X" (or Previous Operation Outcome is "FIRST_OPERATION"), treat this as the inaugural deployment of this campaign (referencing the Campaign Name) and set the strategic tone for the campaign.
+   - If the Previous Operation Outcome was "SUCCESS", write a briefing that celebrates our momentum, references the victory in the previous operation (mentioning its codename), and explains how we are pressing our tactical advantage.
+   - If the Previous Operation Outcome was "FAILED", write a briefing that treats this as a critical recovery, reinforcement, or high-stakes retaliation sweep to regain control and stabilize the sector after our setback in the previous operation (mentioning its codename).
+5. No Gameplay Clashing Details: Do NOT invent specific named NPCs, custom coordinates, or precise base names. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean." Keep ground locations referred to as "outposts," "facilities," or "strongholds."
+6. Complication & ROE Integration: Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the "briefing" text as a natural tactical heads-up from the intel team.
+7. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).`;
+
+            let campaignBlock = "";
+            if (activeCampaign && activeCampaign.active) {
+              const opNum = activeCampaign.stats.completed + 1;
+              const lastOutcome = activeCampaign.lastOpOutcome;
+              const lastOpName = activeCampaign.lastOpCodename || "N/A";
+              
+              campaignBlock = `- Campaign Context:
+  * Campaign Name: "${activeCampaign.name}"
+  * Deployment Status: Operation ${opNum} of ${activeCampaign.totalOps}
+  * Previous Operation Name: "${lastOpName}"
+  * Previous Operation Outcome: ${opNum === 1 ? "FIRST_OPERATION" : lastOutcome}
+`;
+              console.log("SC-TOC: Active campaign context injected in LLM prompt:", campaignBlock.trim());
+            }
 
             const promptText = `Generate the intel JSON dossier for:
 - Operation Codename: "${codename}"
 - Sector: "${system}"
 - Sponsoring Client: "${sponsor}"
 - Threat Profile: "${threat} (${briefing.threatDetails})"
-- Mission Flow:
+${campaignBlock}- Mission Flow:
 ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (${p.description})`).join("\n")}
 - Complication Parameter: "${briefing.complication}"
 - Rules of Engagement: "${briefing.roe}"
