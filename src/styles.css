@@ -460,7 +460,7 @@ select:focus, input[type="text"]:focus {
 }
 
 .briefing-address-box::before {
-  content: "🖥️ AEGIS TACTICAL SYSTEMS // BRIEFING DOSSIER";
+  content: "📡 COMMAND INTEL // TACTICAL BRIEFING BOARD";
   display: block;
   font-family: var(--font-console);
   font-size: 10px;
