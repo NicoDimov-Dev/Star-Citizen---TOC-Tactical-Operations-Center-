@@ -867,7 +867,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Load latest configuration values
         if (settingAiEnabled) settingAiEnabled.checked = localStorage.getItem("SC_TOC_AI_ENABLED") === "true";
         if (settingGeminiKey) settingGeminiKey.value = localStorage.getItem("SC_TOC_GEMINI_KEY") || "";
-        if (settingAiModel) settingAiModel.value = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-1.5-flash";
+        if (settingAiModel) settingAiModel.value = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-2.5-flash";
         
         settingsModal.classList.add("active");
       });
@@ -930,7 +930,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Check if Neural AI Bridge is active
         const aiEnabled = localStorage.getItem("SC_TOC_AI_ENABLED") === "true";
         const geminiKey = localStorage.getItem("SC_TOC_GEMINI_KEY");
-        const aiModel = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-1.5-flash";
+        const aiModel = localStorage.getItem("SC_TOC_AI_MODEL") || "gemini-2.5-flash";
 
         if (aiEnabled && geminiKey) {
           // Auto-focus Active HUD Tab to show processing overlay
