@@ -486,6 +486,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    function updateAiStatusHeader() {
+      const hudAiStatus = document.getElementById("hud-ai-status");
+      if (!hudAiStatus) return;
+
+      const aiEnabled = localStorage.getItem("SC_TOC_AI_ENABLED") === "true";
+      const geminiKey = localStorage.getItem("SC_TOC_GEMINI_KEY");
+
+      if (aiEnabled && geminiKey) {
+        hudAiStatus.textContent = "CONNECTED";
+        hudAiStatus.style.color = "var(--color-primary)";
+      } else if (aiEnabled && !geminiKey) {
+        hudAiStatus.textContent = "NO KEY";
+        hudAiStatus.style.color = "var(--color-danger)";
+      } else {
+        hudAiStatus.textContent = "OFFLINE";
+        hudAiStatus.style.color = "var(--color-text-muted)";
+      }
+    }
+
     // UI toggle
     if (btnToggleCampaign && campaignSetupPanel) {
       btnToggleCampaign.addEventListener("click", () => {
@@ -889,6 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         settingsModal.classList.remove("active");
         renderCampaignUI();
+        updateAiStatusHeader();
       });
     }
 
@@ -1476,6 +1496,7 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
         if (activeCampaign && activeCampaign.active && activeCampaign.stats.completed === activeCampaign.totalOps) {
           triggerCampaignCompletion();
         }
+        updateAiStatusHeader();
       } catch (err) {
         console.warn("Schema migration: Clearing active operations state to recover console execution.", err);
         localStorage.removeItem("SC_TOC_ACTIVE_OP");
