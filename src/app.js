@@ -1417,6 +1417,14 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
 
     function loadSavedState() {
       try {
+        // Auto-migrate legacy 1.5 models to 2.5 models
+        const storedModel = localStorage.getItem("SC_TOC_AI_MODEL");
+        if (storedModel === "gemini-1.5-flash") {
+          localStorage.setItem("SC_TOC_AI_MODEL", "gemini-2.5-flash");
+        } else if (storedModel === "gemini-1.5-pro") {
+          localStorage.setItem("SC_TOC_AI_MODEL", "gemini-2.5-pro");
+        }
+
         // Load historical logbook
         const savedHistory = localStorage.getItem("SC_TOC_HISTORY");
         if (savedHistory) {
