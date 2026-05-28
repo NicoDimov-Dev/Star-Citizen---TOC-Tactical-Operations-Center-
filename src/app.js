@@ -772,7 +772,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const roe = randomChoice(ROE_POOL);
 
       // Finalize read-aloud commander speech (Streamlined - NO stacked alert openers/closers!)
-      const fullSpeech = `"${crewAddress.trim()} Furthermore, ${complication} ${roe}"`;
+      const fullSpeech = `${crewAddress.trim()} Furthermore, ${complication} ${roe}`;
 
       // 4. Compile Chronological Flight Sequence HTML
       for (let i = 0; i < numPhases; i++) {
@@ -847,7 +847,9 @@ document.addEventListener("DOMContentLoaded", () => {
         timelineHTML: timeline,
         insertionVector: insertion,
         gearsList: `Tactical gear spec: ${currentThreat.armor}. Recommended entry tactics: ${insertion}`,
-        phasesRP: phasesRP
+        phasesRP: phasesRP,
+        complication: complication,
+        roe: roe
       };
     }
 
@@ -955,39 +957,38 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           try {
-            const systemInstruction = `You are the Tactical Operations Command AI for the Star Citizen Tactical Operations Center (SC-TOC).
-Your objective is to compile a highly immersive, in-universe crew address (commander speech) read aloud by Captain Nico to his PMC crew.
+            const systemInstruction = `You are the Aegis Systems Tactical Mainframe, compiling an automated Tactical Operation Dossier (Briefing Overview) for the Star Citizen Tactical Operations Center (SC-TOC).
+
+Generate a detached, highly professional, and immersive military-intelligence dossier summary. 
 
 Follow these strict constraints:
-1. Tone: Professional, UEE-aligned military contractor. Keep it highly immersive, serious, and realistic.
-2. System Lore:
-   - Stanton: Corporate compliance, Hurston/ArcCorp/microTech/Crusader joint taskforce operations.
-   - Pyro: Frontline Coalition Expeditionary sweeps, lawless grit, Xenothreat threat vectors.
-   - Nyx: Levski People's Alliance miners solidarity, defending asteroid corridors from border syndicates.
-3. Goal & Enabler Chronology:
-   - The final phase is the primary objective (Climax).
-   - Preceding phases are tactical enablers (Prerequisites) that logically make the climax possible.
+1. Persona: You are a secure military mainframe terminal. Write in a detached, cold, objective, and analytical UEE Tactical Command voice.
+   - Do NOT write in the first person (no "I", "we", "this is Captain Nico", "Nico out", or first-person crew addresses).
+   - The text should read like a secure intelligence brief displayed on a terminal HUD.
+2. Structure:
+   - NO introductory chatter, radio-channel greetings, or administrative sign-offs. Start directly with the tactical summary of the operations grid.
+   - Section 1: Strategic Overview. Describe the regional threat landscape, corporate/militia context, and the primary tactical objective.
+   - Section 2: Phase Connections. Explain the logical operational connection between the selected phases. Create fluid, highly diverse, organic, and realistic military justifications. Strictly AVOID formulaic phrasing like "In order to do B, we must first do A." Instead, explain it through structural intelligence (e.g., target routing, supply disruptions, radar blocking, defense coordination, or local communications arrays).
+   - Section 3: Complication & Engagement Profile. Seamlessly integrate the tactical complication and Rules of Engagement (ROE) as operational safety parameters.
+3. System Lore:
+   - Stanton: Corporate jurisdiction, Hurston/ArcCorp/microTech/Crusader regulatory security and commercial compliance.
+   - Pyro: Lawless outer rim, Coalition expeditionary forces, frontier militia coordination, Xenothreat vectors.
+   - Nyx: Levski People's Alliance solidarity, mining array defense grids, border syndicate incursions.
 4. Logistics / Hauling Staging:
-   - Cargo hauling goes from Point A to Point B. Explain it as staging fuel cells, ammo drops, or medical evacuation networks (CASEVAC) elsewhere in the system to prepare for the climax, NOT direct raid interactions.
-5. Strict Constraints - Do NOT Invent In-Game Details:
-   - Do NOT invent specific named NPCs, custom coordinates, or specific base names that aren't real. Keep threats and locations aligned with system lore (e.g. NineTails cells, outlaw fighter wings, hostile outposts) so they never clash with actual in-game targets.
-   - Never mention "phases", "mechanics", "dropdowns", or fourth-wall breaking terms. Keep it 100% in-universe.
-6. Speech Structure:
-   - Start directly with a punchy UEE-sanctioned regional command authority intro statement.
-   - Core Plan: The overarching target (Climax) and the enabler sequence.
-   - Complication & ROE: Integrate the tactical complication and Rules of Engagement naturally.
-   
-Keep the address under 220 words, tight, direct, and elite. Do not include any greeting headers or closing signatures. Just the raw speech text inside double quotes.`;
+   - Cargo hauling goes from Point A to Point B. Explain it as resupply pipelines, CASEVAC staging, or ordnance delivery to secure regional vectors.
+5. Strict Constraints:
+   - Do NOT invent specific named NPCs, custom coordinates, or specific base names that aren't real. Keep it realistic and aligned with Star Citizen lore so it never clashes with dynamic runtime spawns.
+   - Keep the summary under 200 words, highly technical, direct, and elite. Do not wrap in double quotes or add any meta-text.`;
 
-            const promptText = `Generate the crew address for:
+            const promptText = `Generate the Tactical Operation Dossier for:
 - Operation Codename: "${codename}"
-- Star System: "${system}"
-- Sponsor: "${sponsor}"
-- Threat Level: "${threat} (${briefing.threatDetails})"
-- Selected Phases:
+- Sector: "${system}"
+- Sponsoring Client: "${sponsor}"
+- Threat Profile: "${threat} (${briefing.threatDetails})"
+- Mission Flow:
 ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (${p.description})`).join("\n")}
-- Selected Complication: "${replaceTokens(randomChoice(COMPLICATIONS_POOL), system)}"
-- Selected ROE: "${randomChoice(ROE_POOL)}"
+- Complication Parameter: "${briefing.complication}"
+- Rules of Engagement: "${briefing.roe}"
 `;
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${geminiKey}`, {

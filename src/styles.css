@@ -460,7 +460,7 @@ select:focus, input[type="text"]:focus {
 }
 
 .briefing-address-box::before {
-  content: "🔊 COMMANDER DIRECTIVE: READ OUT TO CREW";
+  content: "🖥️ AEGIS TACTICAL SYSTEMS // BRIEFING DOSSIER";
   display: block;
   font-family: var(--font-console);
   font-size: 10px;
@@ -471,7 +471,6 @@ select:focus, input[type="text"]:focus {
 }
 
 .briefing-speech {
-  font-style: italic;
   color: hsl(38, 40%, 88%);
 }
 
