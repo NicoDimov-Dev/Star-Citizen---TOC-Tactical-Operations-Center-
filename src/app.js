@@ -1005,8 +1005,9 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
                   }]
                 },
                 generationConfig: {
-                  temperature: 0.6,
+                  temperature: 0.8,
                   maxOutputTokens: 1000,
+                  responseMimeType: "application/json",
                   thinkingConfig: {
                     thinkingBudget: 0
                   }
@@ -1018,10 +1019,38 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: ${p.type} - "${p.title}" (
               throw new Error(`Gemini API HTTP Error: status ${response.status}`);
             }
 
-            const data = await response.ok ? await response.json() : null;
+            const data = await response.json();
             if (data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
-              const cleanSpeech = data.candidates[0].content.parts[0].text.trim();
-              briefing.speechToCrew = cleanSpeech;
+              const rawText = data.candidates[0].content.parts[0].text.trim();
+              
+              // Strip potential markdown blocks
+              let cleanedText = rawText;
+              if (cleanedText.startsWith("```json")) {
+                cleanedText = cleanedText.substring(7);
+              }
+              if (cleanedText.endsWith("```")) {
+                cleanedText = cleanedText.substring(0, cleanedText.length - 3);
+              }
+              cleanedText = cleanedText.trim();
+
+              const parsedJSON = JSON.parse(cleanedText);
+              
+              if (parsedJSON.briefing) {
+                briefing.speechToCrew = parsedJSON.briefing;
+              }
+              if (parsedJSON.threatDetails) {
+                briefing.threatDetails = parsedJSON.threatDetails;
+              }
+              if (parsedJSON.insertionVector) {
+                briefing.insertionVector = parsedJSON.insertionVector;
+                briefing.gearsList = `Tactical gear spec: ${briefing.threatArmor}. Recommended entry tactics: ${parsedJSON.insertionVector}`;
+              }
+              if (parsedJSON.crewDirectives && Array.isArray(parsedJSON.crewDirectives)) {
+                briefing.phasesRP = parsedJSON.crewDirectives.map((directive, index) => ({
+                  phaseNum: index + 1,
+                  rule: directive
+                }));
+              }
             }
           } catch (apiErr) {
             console.error("Gemini AI bridge compilation failed, reverting to local static compiler.", apiErr);
