@@ -87,6 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Global helper to identify Star System from contract data (locations/description/id)
     function getStarSystemForContract(c) {
+      if (c.system) return c.system;
       const text = (c.title + " " + c.description + " " + (c.locations || []).join(" ") + " " + c.id).toLowerCase();
       if (text.includes("pyro") || text.includes("ruin station") || text.includes("sunset mesa")) {
         return "Pyro";
