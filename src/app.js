@@ -1251,7 +1251,10 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             `;
             speechContainer.style.position = "relative";
-                       const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a highly realistic, gritty, and narrative-driven tactical intelligence briefing for the Captain and his crew.
+            speechContainer.appendChild(loader);
+          }
+          try {
+              const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a highly realistic, gritty, and narrative-driven tactical intelligence briefing for the Captain and his crew.
 
 Return your response strictly as a single, valid JSON object. Do NOT wrap the JSON in markdown code blocks, do not add any markdown backticks, and do not add any conversational text before or after the JSON.
 
