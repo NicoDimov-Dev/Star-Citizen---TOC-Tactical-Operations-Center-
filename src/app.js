@@ -74,8 +74,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Global helper to map raw DB category names to clean Mobiglas Categories
-    function getMobiglasCategory(dbType) {
-      const type = (dbType || "").toLowerCase().trim();
+    function getMobiglasCategory(c) {
+      if (typeof c === "object" && c !== null) {
+        if (c.category) return c.category;
+        c = c.type;
+      }
+      const type = (c || "").toLowerCase().trim();
       if (type === "bounty hunter") return "Bounty Hunter";
       if (type === "mercenary") return "Mercenary";
       if (type === "delivery" || type === "hauling" || type === "courier") return "Delivery & Logistics";
@@ -789,7 +793,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Extract all unique givers matching system and category from SC_CONTRACTS
           const matchedGivers = new Set();
           SC_CONTRACTS.forEach(c => {
-            if (getStarSystemForContract(c) === sys && getMobiglasCategory(c.type) === cat) {
+            if (getStarSystemForContract(c) === sys && getMobiglasCategory(c) === cat) {
               matchedGivers.add(c.giver);
             }
           });
@@ -817,7 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const matchedMissions = SC_CONTRACTS.filter(c => {
             return (
               getStarSystemForContract(c) === sys &&
-              getMobiglasCategory(c.type) === cat &&
+              getMobiglasCategory(c) === cat &&
               c.giver === giver
             );
           });

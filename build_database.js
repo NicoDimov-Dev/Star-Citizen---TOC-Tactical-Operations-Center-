@@ -41,7 +41,7 @@ function normalizeGiver(giver) {
   return g;
 }
 
-// Helper to determine Star System based on locations and description
+// Star System Resolver
 function getStarSystem(locs, title, desc) {
   const text = (title + " " + desc + " " + locs.join(" ")).toLowerCase();
   if (text.includes("pyro") || text.includes("ruin station") || text.includes("sunset mesa")) {
@@ -54,242 +54,158 @@ function getStarSystem(locs, title, desc) {
 }
 
 // -----------------------------------------------------------------------------
-// DEFINITION OF CAREER TYPOLOGIES (MISSION TYPES)
-// This implements a clean taxonomy free of player instance details, template tags, or specific gang member names.
+// INTELLIGENT CAREER CLASSIFIER & GROUPER
+// Resolves the true in-game career profile based on the actual contract contents.
+// Strips player instance clutter, bracket placeholders, and specific names.
 // -----------------------------------------------------------------------------
-const CAREER_TYPOLOGIES = [
-  // Bounty Hunter
-  {
-    key: "bh_procedural",
-    type: "Bounty Hunter",
-    title: "Verified Bounty Hunting Warrant (LRT/MRT/HRT/VHRT)",
-    description: "An official bounty warrant issued for a verified criminal target in atmospheric or orbital flight. Target may travel with light or heavy defensive fighter escorts.",
-    match: (type, title, giver, illegal) => type === "Bounty Hunter" && !title.includes("License") && !title.includes("Certification") && !title.includes("Permit") && !title.includes("Arlington") && !title.includes("Reclusive") && !illegal
-  },
-  {
-    key: "bh_certification",
-    type: "Bounty Hunter",
-    title: "Guild Bounty Hunter License Certification Evaluation",
-    description: "A guild evaluation flight to test the contractor's combat and interception skills against calibrated-tier targets before issuing specialized hunter licenses.",
-    match: (type, title, giver, illegal) => type === "Bounty Hunter" && (title.includes("License") || title.includes("Certification") || title.includes("Permit")) && !illegal
-  },
-  {
-    key: "bh_reclusive",
-    type: "Bounty Hunter",
-    title: "Reclusive High-Value Target Bounty Warrant",
-    description: "A high-priority bounty tracking contract targeting a reclusive criminal who remains hidden until multiple defensive escorts and lieutenants are drawn out and neutralized.",
-    match: (type, title, giver, illegal) => type === "Bounty Hunter" && title.includes("Reclusive") && !illegal
-  },
-  {
-    key: "bh_arlington",
-    type: "Bounty Hunter",
-    title: "Arlington Gang Group Warrant (Bounty Hunt)",
-    description: "A high-profile multi-stage group warrant to locate, intercept, and apprehend high-ranking members of the notorious Arlington ship-jacking gang in Stanton orbit.",
-    match: (type, title, giver, illegal) => type === "Bounty Hunter" && title.includes("Arlington") && !illegal
-  },
-  {
-    key: "bh_illegal",
-    type: "Bounty Hunter",
-    title: "Assassination Contract (Assassinate Security Detail)",
-    description: "An outlaw assassination contract issued by private brokers or syndicates to eliminate high-profile Advocacy agents, corporate security officials, or trade delegates.",
-    match: (type, title, giver, illegal) => (type === "Bounty Hunter" || type === "Mercenary") && illegal && (title.includes("Bounty") || title.includes("Assassinate") || title.includes("Kill") || title.includes("Strike") || title.includes("Vaughn"))
-  },
+function classifyContract(data, rawTitle, giver, rawType, illegal, starSystem) {
+  const t = (rawTitle || "").toLowerCase();
+  const d = (data.Description || "").toLowerCase();
+  const type = (rawType || "").toLowerCase().trim();
 
-  // Mercenary
-  {
-    key: "merc_bunker_sweep",
-    type: "Mercenary",
-    title: "Subterranean Bunker Clearance Sweep",
-    description: "Breach a secured underground planetary facility or UEE security depot on foot, eliminate hostile occupying forces, and restore automated defensive grids.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && !illegal && (title.includes("Bunker") || title.includes("Infiltrate") || title.includes("Clear Site") || title.includes("Eradicate") || title.includes("OccuCave") || title.includes("Evict"))
-  },
-  {
-    key: "merc_outpost_clear",
-    type: "Mercenary",
-    title: "Surface Outpost Eviction & Clearance",
-    description: "Tactical deployment to breach and clear occupied surface outposts, evict trespassers, and secure corporate or civilian facilities against hostiles.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && !illegal && (title.includes("Outpost") || title.includes("Settlement") || title.includes("Eviction") || title.includes("Clearance"))
-  },
-  {
-    key: "merc_vip_defend",
-    type: "Mercenary",
-    title: "Asset Protection & VIP Combat Escort",
-    description: "An elite close-protection contract to secure high-value civilian infrastructure, VIP transport shuttle flights, or luxury hulls against pirate attacks.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && !illegal && (title.includes("Defend") || title.includes("Asset Protection") || title.includes("VIP") || title.includes("Escort") || title.includes("Guard"))
-  },
-  {
-    key: "merc_comm_disrupt",
-    type: "Mercenary",
-    title: "Comm Network Uplink Disruption",
-    description: "Espionage operation to approach a local Comm-Array sector under active security fire, breach the central terminal, and temporarily disable its transmission capabilities.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && !illegal && (title.includes("Comm") || title.includes("Array") || title.includes("Tower") || title.includes("Uplink"))
-  },
-  {
-    key: "merc_patrol",
-    type: "Mercenary",
-    title: "System Travel Lane Security Patrol",
-    description: "Active flight patrol loops through commerce lanes or asteroid fields to scan for pirate beacons, check trading hulls, and eliminate hostile scouts.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && !illegal && (title.includes("Patrol") || title.includes("Sweep") || title.includes("Route"))
-  },
-  {
-    key: "merc_boarding",
-    type: "Mercenary",
-    title: "Boarding Action Reclamation",
-    description: "Emergency high-intensity boarding action to reclaim a disabled civilian transport or massive industrial freighter under active pirate boarding attack.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && !illegal && (title.includes("Boarding") || title.includes("Reclaim") || title.includes("Freight") || title.includes("Distress"))
-  },
-  {
-    key: "merc_illegal_defense",
-    type: "Mercenary",
-    title: "Stolen Cargo & Outpost Defense Contract",
-    description: "An outlaw security contract to hold and defend stolen industrial goods, weapons caches, or illegal outpost coordinates against corporate PMC raid squads.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && illegal && (title.includes("Guard") || title.includes("Defend") || title.includes("Stolen") || title.includes("Cargo"))
-  },
-  {
-    key: "merc_illegal_raid",
-    type: "Mercenary",
-    title: "Frontier Settlement Raid / Sabotage",
-    description: "An outlaw mercenary assault to breach corporate settlements, sabotage reactor cores, and disrupt regional planetary operations.",
-    match: (type, title, giver, illegal) => type === "Mercenary" && illegal && (title.includes("Raid") || title.includes("Sabotage") || title.includes("Disrupt") || title.includes("Attack"))
-  },
+  // 1. RESOLVE THE TRUE MOBIGLAS CATEGORY FIRST BASED ON ACTUAL NATURE
+  let category = "Mercenary"; // Default fallback
+  
+  if (
+    t.includes("black box") || t.includes("blackbox") ||
+    t.includes("missing") || t.includes("find ") ||
+    t.includes("search cave") || t.includes("rescue") ||
+    t.includes("captive") || t.includes("volunteer") ||
+    t.includes("onyx") || t.includes("asd facility delving") ||
+    d.includes("black box") || d.includes("blackbox") ||
+    d.includes("missing person") || d.includes("locate missing") ||
+    d.includes("hostage") || d.includes("captive")
+  ) {
+    category = "Investigation";
+  } else if (type === "bounty hunter" || t.includes("bounty") || t.includes("assassinate") || t.includes("arlington") || t.includes("targetname")) {
+    category = "Bounty Hunter";
+  } else if (type === "salvage" || t.includes("salvage") || t.includes("scraping") || t.includes("fracturing")) {
+    category = "Industrial Salvage";
+  } else if (type.includes("resource drive") || type.includes("mining") || t.includes("mining") || t.includes("prospecting") || t.includes("rock-cracking")) {
+    category = "Mining & Resource";
+  } else if (type === "delivery" || type === "hauling" || type === "courier" || t.includes("delivery") || t.includes("hauling") || t.includes("courier") || t.includes("haul")) {
+    category = "Delivery & Logistics";
+  }
 
-  // Logistics & Delivery
-  {
-    key: "delivery_courier",
-    type: "Delivery",
-    title: "Standard Courier Package Transport",
-    description: "Pick up and transport secure logistics packages or emergency cargo containers between moons, orbital stations, and surface outposts.",
-    match: (type, title, giver, illegal) => (type === "Delivery" || type === "Courier" || type === "Hauling") && !illegal && (title.includes("Courier") || title.includes("Package") || title.includes("Standard") || title.includes("Delivery") || title.includes("Run"))
-  },
-  {
-    key: "delivery_bulk",
-    type: "Delivery",
-    title: "Bulk Commercial Cargo Hauling",
-    description: "Secure and transport multiple SCU grids of commercial trade commodities or industrial components across stellar commerce zones.",
-    match: (type, title, giver, illegal) => (type === "Delivery" || type === "Courier" || type === "Hauling") && !illegal && (title.includes("Bulk") || title.includes("Cargo") || title.includes("Haul") || title.includes("Freight"))
-  },
-  {
-    key: "delivery_wreck_recovery",
-    type: "Delivery",
-    title: "Wreckage Cargo Salvage Recovery",
-    description: "Locate a disabled cargo vessel or planetary crash site, search the debris fields on foot, and recover specific cargo grids under hazard alerts.",
-    match: (type, title, giver, illegal) => (type === "Delivery" || type === "Courier" || type === "Hauling" || type === "Investigation") && !illegal && (title.includes("Wreck") || title.includes("Recovery") || title.includes("Retrieval") || title.includes("Debris"))
-  },
-  {
-    key: "delivery_illegal",
-    type: "Delivery",
-    title: "Smuggling Contract (Contraband Delivery)",
-    description: "An outlaw courier contract to transport highly restricted contraband, illegal medical supplies, or stolen assets through corporate scanner grids.",
-    match: (type, title, giver, illegal) => (type === "Delivery" || type === "Courier" || type === "Hauling") && illegal
-  },
+  // 2. MAP TO A BEAUTIFUL, GROUPED CAREER TYPOLOGY TITLE AND DESCRIPTION
+  let cleanTitle = "";
+  let cleanDesc = "";
 
-  // Industrial Salvage
-  {
-    key: "salvage_scraping",
-    type: "Salvage",
-    title: "Hull Scraping & RMC Processing",
-    description: "Secure legal salvage rights to corporate derelict hulls and scrape their outer plating to extract Recycled Material Composite canisters.",
-    match: (type, title, giver, illegal) => type === "Salvage" && !title.includes("Fracturing") && !title.includes("Structural") && !illegal
-  },
-  {
-    key: "salvage_fracturing",
-    type: "Salvage",
-    title: "Structural Hull Fracturing Operation",
-    description: "Deploy massive industrial salvage beams to fracture disabled military or civilian ship frames and process their composite structural grids.",
-    match: (type, title, giver, illegal) => type === "Salvage" && (title.includes("Fracturing") || title.includes("Structural") || title.includes("Frame")) && !illegal
-  },
-  {
-    key: "salvage_illegal",
-    type: "Salvage",
-    title: "Unsanctioned / Illegal Salvage Reclamation",
-    description: "An outlaw salvage contract to scrape and dismantle high-value ship hulls under active security blockades or before corporate sweeps arrive.",
-    match: (type, title, giver, illegal) => type === "Salvage" && illegal
-  },
+  if (category === "Investigation") {
+    if (giver === "Bit Zeros") {
+      cleanTitle = "Unsanctioned Black Box Flight Recovery";
+      cleanDesc = "Locate a disabled space transport drifting in blocked space, breach the locks, recover the flight recorder box, and slice its encryption key.";
+    } else if (giver === "Citizens for Prosperity") {
+      if (t.includes("missing person") || t.includes("missing:") || t.includes("volunteers") || t.includes("find ")) {
+        cleanTitle = "Search & Rescue: Locate Missing Settlers";
+        cleanDesc = "Investigate coordinates of a lost ship or a frontier outpost that has gone completely silent. Search the site and recover crew logs or survivors.";
+      } else if (t.includes("search cave")) {
+        cleanTitle = "Spelunking Search & Rescue: Cave Delve";
+        cleanDesc = "Spelunk into dense, hazardous planetary caves to locate missing volunteers or enforcers, neutralizing rival miners or hostile fauna hiding inside.";
+      } else {
+        cleanTitle = "Search & Retrieve: Lost Outpost Supplies";
+        cleanDesc = "Navigate to hostile-controlled remote coordinates, search the wreckage, and retrieve stolen cargo units or vital logistics containers.";
+      }
+    } else if (giver === "Eckhart Security") {
+      cleanTitle = "Classified ASD Facility Server Purge (Data Wipe)";
+      cleanDesc = "Infiltrate subterranean Associated Science and Development complexes, access data terminals, and execute a permanent server purge of research logs.";
+    } else if (giver === "MicroTech" || giver === "Hurston Dynamics" || giver === "Crusader Industries" || giver === "ArcCorp") {
+      cleanTitle = "Resource Drive: Emergency Cargo Rescue";
+      cleanDesc = "Locate a disabled corporate transport drifting in deep space after a raid, scan for survivors, and recover vital cargo boxes under active fire.";
+    } else {
+      cleanTitle = "Classified Forensic Flight Investigation";
+      cleanDesc = "Navigate to coordinate wreckage sites, scan disabled hulls for telemetry recordings, and extract flight logs for private brokers.";
+    }
+  }
 
-  // Mining & Resource
-  {
-    key: "mining_surface",
-    type: "Mining",
-    title: "Moon Surface Mining & Prospecting",
-    description: "Utilize ground vehicles or planetary mining lasers to locate mineral veins, fracture surface rocks, and collect raw industrial ore.",
-    match: (type, title, giver, illegal) => (type.includes("Mining") || type.includes("Resource")) && !title.includes("Asteroid") && !title.includes("Belt") && !illegal
-  },
-  {
-    key: "mining_asteroid",
-    type: "Mining",
-    title: "Asteroid Belt Rock-Cracking Operations",
-    description: "Navigate high-density asteroid rings in a mining ship to scan, fracture, and extract volatile minerals from deep space asteroid fields.",
-    match: (type, title, giver, illegal) => (type.includes("Mining") || type.includes("Resource")) && (title.includes("Asteroid") || title.includes("Belt") || title.includes("Space")) && !illegal
-  },
-  {
-    key: "mining_refinery",
-    type: "Mining",
-    title: "Refined Ore Transport & Logistics",
-    description: "Transport refined mineral blocks or raw ore canisters from planetary depots and orbital mining platforms to commercial refinery processing grids.",
-    match: (type, title, giver, illegal) => (type.includes("Mining") || type.includes("Resource")) && (title.includes("Refinery") || title.includes("Transport") || title.includes("Logistics") || title.includes("Drop")) && !illegal
-  },
+  else if (category === "Bounty Hunter") {
+    if (t.includes("arlington")) {
+      cleanTitle = "Arlington Gang Group Bounty Hunt Warrant";
+      cleanDesc = "A high-profile multi-stage group warrant issued by Eckhart Security to locate, intercept, and apprehend high-ranking members of the notorious Arlington gang.";
+    } else if (t.includes("certification") || t.includes("license") || t.includes("permit")) {
+      cleanTitle = "Guild Bounty Hunter License Evaluation";
+      cleanDesc = "A guild evaluation flight to test the contractor's combat and interception skills against calibrated-tier targets before issuing specialized hunter licenses.";
+    } else if (t.includes("reclusive")) {
+      cleanTitle = "Reclusive High-Value Target Bounty Warrant";
+      cleanDesc = "A high-priority bounty tracking contract targeting a reclusive criminal who remains hidden until multiple defensive escorts and lieutenants are drawn out.";
+    } else {
+      cleanTitle = illegal ? "Assassination Contract: Neutralize Security Detail" : "Verified Bounty Hunting Warrant (LRT/MRT/HRT/VHRT)";
+      cleanDesc = illegal ? "An outlaw contract issued to intercept and eliminate high-profile corporate security or Advocacy officials in deep space lanes."
+                          : "An official guild-sanctioned bounty warrant issued for a verified criminal target in atmospheric or orbital flight.";
+    }
+  }
 
-  // Investigation
-  {
-    key: "investigation_missing",
-    type: "Investigation",
-    title: "Search & Rescue (Locate Missing Persons)",
-    description: "Investigate coordinates of a lost ship or a surface outpost that has gone completely silent. Search the site and recover any missing crew logs.",
-    match: (type, title, giver, illegal) => type === "Investigation" && !illegal && (title.includes("Missing") || title.includes("Volunteers") || title.includes("Rescue") || title.includes("Search") || title.includes("Find"))
-  },
-  {
-    key: "investigation_blackbox",
-    type: "Investigation",
-    title: "Black Box Flight Recovery Operation",
-    description: "Navigate to a hazardous derelict ship sector, locate the flight recorder block, slice its security encrypt, and return it safely to Covalex boards.",
-    match: (type, title, giver, illegal) => type === "Investigation" && !illegal && (title.includes("Black Box") || title.includes("Blackbox") || title.includes("Recorder"))
-  },
-  {
-    key: "investigation_facility_delve",
-    type: "Investigation",
-    title: "Classified ASD Facility Investigation",
-    description: "Delve deep into subterranean Associated Science and Development research complexes, investigate data terminal logs, and extract prototype schematics.",
-    match: (type, title, giver, illegal) => type === "Investigation" && !illegal && (title.includes("ASD") || title.includes("Facility") || title.includes("Onyx") || title.includes("Delve") || title.includes("Data"))
+  else if (category === "Industrial Salvage") {
+    if (t.includes("fracturing") || t.includes("structural")) {
+      cleanTitle = "Structural Hull Fracturing Operation";
+      cleanDesc = "Utilize heavy industrial salvage lasers to fracture disabled military or civilian ship frames and process their composite structural grids.";
+    } else {
+      cleanTitle = illegal ? "Unsanctioned / Illegal Salvage Reclamation" : "Hull Scraping & RMC Processing";
+      cleanDesc = illegal ? "An outlaw salvage contract to scrape and dismantle high-value ship hulls under active security blockades or before corporate sweeps arrive."
+                          : "Secure legal salvage rights to corporate derelict hulls and scrape their outer plating to extract Recycled Material Composite canisters.";
+    }
   }
-];
 
-// Catch-all baseline if no specific typology matches
-const getBaselineFallback = (rawType, illegal) => {
-  if (rawType === "Bounty Hunter") {
-    return {
-      title: "Verified Bounty Hunting Contract",
-      description: "An official bounty warrant issued for a verified criminal target in atmospheric or orbital flight. Target may travel with light or heavy escorts."
-    };
+  else if (category === "Mining & Resource") {
+    if (t.includes("asteroid") || t.includes("belt") || t.includes("space")) {
+      cleanTitle = "Asteroid Belt Rock-Cracking Operations";
+      cleanDesc = "Navigate high-density asteroid rings in a mining ship to scan, fracture, and extract volatile minerals from deep space asteroid fields.";
+    } else if (t.includes("refinery") || t.includes("logistics") || t.includes("transport")) {
+      cleanTitle = "Refined Ore Transport & Logistics";
+      cleanDesc = "Transport refined mineral blocks or raw ore canisters from planetary depots and orbital mining platforms to commercial refinery processing grids.";
+    } else {
+      cleanTitle = "Moon Surface Mining & Ground Prospecting";
+      cleanDesc = "Utilize ground vehicles or planetary mining lasers to locate mineral veins, fracture surface rocks, and collect raw industrial ore.";
+    }
   }
-  if (rawType === "Salvage") {
-    return {
-      title: "Standard Hull Scraping & RMC Processing",
-      description: "Secure legal salvage rights to corporate derelict hulls and scrape their outer plating to extract Recycled Material Composite canisters."
-    };
+
+  else if (category === "Delivery & Logistics") {
+    if (illegal) {
+      cleanTitle = "Smuggling Contract: Contraband Cargo Run";
+      cleanDesc = "An outlaw logistics contract to transport restricted cargo, illegal medical supplies, or stolen assets through corporate scanner grids.";
+    } else if (t.includes("bulk") || t.includes("cargo haul") || t.includes("freight")) {
+      cleanTitle = "Bulk Commercial Cargo Hauling Contract";
+      cleanDesc = "Secure and transport multiple SCU grids of commercial trade commodities or industrial components across stellar commerce zones.";
+    } else if (t.includes("multiple")) {
+      cleanTitle = "Multi-Drop Logistics Courier Delivery";
+      cleanDesc = "Pick up and transport multiple secure logistics parcels between planetary outposts, local moons, and orbital cargo transfer hubs.";
+    } else {
+      cleanTitle = "Standard Courier Package Transport";
+      cleanDesc = "Pick up and transport secure logistics packages or emergency cargo containers between moons, orbital stations, and surface outposts.";
+    }
   }
-  if (rawType === "Delivery" || rawType === "Hauling" || rawType === "Courier") {
-    return {
-      title: "Standard Inter-Outpost Logistics Courier",
-      description: "Pick up and transport secure logistics packages or emergency cargo containers between moons, orbital stations, and surface outposts."
-    };
+
+  else { // Mercenary
+    if (t.includes("bunker") || t.includes("infiltrate") || t.includes("clear site") || t.includes("sweep") || t.includes("evict") || t.includes("clear paf")) {
+      cleanTitle = "Subterranean Bunker Clearance Sweep";
+      cleanDesc = "Breach a secured underground planetary facility or UEE security depot on foot, eliminate hostile occupying forces, and restore automated defensive grids.";
+    } else if (t.includes("outpost") || t.includes("settlement") || t.includes("clearance")) {
+      cleanTitle = "Surface Outpost Eviction & Clearance";
+      cleanDesc = "Tactical deployment to breach and clear occupied surface outposts, evict trespassers, and secure corporate or civilian facilities against hostiles.";
+    } else if (t.includes("defend") || t.includes("asset protection") || t.includes("vip") || t.includes("escort") || t.includes("guard")) {
+      cleanTitle = illegal ? "Stolen Cargo & Outpost Defense Contract" : "Asset Protection & VIP Combat Escort";
+      cleanDesc = illegal ? "An outlaw security contract to hold and defend stolen industrial goods, weapons caches, or illegal outpost coordinates against corporate PMC squads."
+                          : "An elite close-protection contract to secure high-value civilian infrastructure, VIP transport shuttle flights, or luxury hulls against pirate attacks.";
+    } else if (t.includes("comm tower") || t.includes("commstowers") || t.includes("disablecommstowers")) {
+      cleanTitle = "Comm Network Uplink Disruption";
+      cleanDesc = "Espionage operation to approach a local Comm-Array sector under active security fire, breach the central terminal, and temporarily disable its transmission capabilities.";
+    } else if (t.includes("patrol") || t.includes("security sweep") || t.includes("route")) {
+      cleanTitle = "System Travel Lane Security Patrol";
+      cleanDesc = "Active flight patrol loops through commerce lanes or asteroid fields to scan for pirate beacons, check trading hulls, and eliminate hostile scouts.";
+    } else if (t.includes("boarding") || t.includes("reclaim") || t.includes("freight") || t.includes("distress")) {
+      cleanTitle = "Boarding Action Reclamation Sweep";
+      cleanDesc = "Emergency high-intensity boarding action to reclaim a disabled civilian transport or massive industrial freighter under active pirate boarding attack.";
+    } else if (t.includes("tutorial")) {
+      cleanTitle = "Contractor Orientation & Field Training";
+      cleanDesc = "Orientation training to familiarize new security contractors with basic flight parameters, tactical HUD sweeps, and UEE code regulations.";
+    } else {
+      cleanTitle = "Security Contractor Tactical Sweep Operation";
+      cleanDesc = "Breach a designated sector in atmospheric or orbital coordinates, neutralize all hostile forces occupying corporate grids, and restore secure communications.";
+    }
   }
-  if (rawType.includes("Mining") || rawType.includes("Resource")) {
-    return {
-      title: "Moon Surface Mining & Prospecting",
-      description: "Utilize ground vehicles or planetary mining lasers to locate mineral veins, fracture surface rocks, and collect raw industrial ore."
-    };
-  }
-  if (rawType === "Investigation") {
-    return {
-      title: "Search & Rescue / Missing Person Investigation",
-      description: "Investigate coordinates of a lost ship or a surface outpost that has gone completely silent. Search the site and recover any missing crew logs."
-    };
-  }
-  return {
-    title: illegal ? "Unsanctioned Private Enforcer Contract" : "Security Contractor Tactical Sweep Operation",
-    description: illegal ? "An outlaw security contract to enforce syndicate rules, defend stolen assets, or execute coordinated strikes." : "Breach a designated sector, neutralize all hostile forces occupying corporate grids, and restore secure comm frequencies."
-  };
-};
+
+  return { category, title: cleanTitle, description: cleanDesc };
+}
 
 const finalTemplates = new Map();
 
@@ -302,13 +218,10 @@ files.forEach(file => {
     const rawGiver = data.MissionGiver || '';
     const illegal = !!data.Illegal;
     let rawType = (data.MissionType && data.MissionType.Name) || 'Mercenary';
-    if (rawType === 'Priority') rawType = 'Mercenary';
-    if (rawType === 'Courier' || rawType === 'Hauling') rawType = 'Delivery';
-    if (rawType.includes('Resource Drive') || rawType.includes('Mining')) rawType = 'Mining';
 
     const giver = normalizeGiver(rawGiver);
 
-    // Filter out tutorial guides or absolute blank names
+    // Skip tutorials and guides
     if (rawTitle.includes('Tutorial') || giver === 'How to Play Guide') return;
 
     // Resolve Locations
@@ -343,21 +256,10 @@ files.forEach(file => {
 
     const starSystem = getStarSystem(locations, rawTitle, data.Description || '');
 
-    // Map to beautiful career typology
-    let title = "";
-    let description = "";
+    // Classify into high-quality career template
+    const classified = classifyContract(data, rawTitle, giver, rawType, illegal, starSystem);
 
-    const matchedTypology = CAREER_TYPOLOGIES.find(t => t.match(rawType, rawTitle, giver, illegal));
-    if (matchedTypology) {
-      title = matchedTypology.title;
-      description = matchedTypology.description;
-    } else {
-      const fallback = getBaselineFallback(rawType, illegal);
-      title = fallback.title;
-      description = fallback.description;
-    }
-
-    const uniqueKey = `${starSystem}_${giver}_${title}_${illegal}`.toLowerCase();
+    const uniqueKey = `${starSystem}_${giver}_${classified.title}_${illegal}`.toLowerCase();
 
     if (finalTemplates.has(uniqueKey)) {
       // Accumulate locations
@@ -369,31 +271,33 @@ files.forEach(file => {
       });
     } else {
       finalTemplates.set(uniqueKey, {
-        id: `template_${rawType.toLowerCase().replace(/ /g, '_')}_${giver.toLowerCase().replace(/ /g, '_')}_${illegal}_${starSystem.toLowerCase()}`,
-        type: rawType,
+        id: `template_${classified.category.toLowerCase().replace(/ /g, '_')}_${giver.toLowerCase().replace(/ /g, '_')}_${illegal}_${starSystem.toLowerCase()}`,
+        system: starSystem,
+        category: classified.category, // Store category explicitly
+        type: rawType, // Fallback type
         giver: giver,
-        title: title,
-        description: description,
+        title: classified.title,
+        description: classified.description,
         locations: locations.slice(0, 15), // Cap size
         illegal: illegal
       });
     }
 
   } catch (err) {
-    // Ignore malformed files
+    // Ignore malformed JSON files
   }
 });
 
-// Convert Map to sorted array
+// Convert Map to array and sort
 const contracts = Array.from(finalTemplates.values());
-contracts.sort((a, b) => a.type.localeCompare(b.type) || a.title.localeCompare(b.title));
+contracts.sort((a, b) => a.system.localeCompare(b.system) || a.category.localeCompare(b.category) || a.giver.localeCompare(b.giver) || a.title.localeCompare(b.title));
 
-console.log(`Successfully compiled and grouped 1000 raw files into ${contracts.length} unique career typologies.`);
+console.log(`Successfully compiled and grouped all raw files into ${contracts.length} unique career typologies.`);
 
-// Generate contracts_data.js file content
+// Generate contracts_data.js content
 const fileContent = `/**
  * Star Citizen Compiled Contracts Database
- * Hand-curated career typologies grouped for zero name-clutter and premium performance.
+ * Curated career typologies grouped for zero name-clutter and premium performance.
  * Generated automatically by build_database.js
  */
 
