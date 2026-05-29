@@ -1278,10 +1278,11 @@ Follow these strict constraints for the content:
    - If Deployment Status is "Operation 1 of X" (or Previous Operation Outcome is "FIRST_OPERATION"), treat this as the inaugural deployment of this campaign (referencing the Campaign Name) and set the strategic tone for the campaign.
    - If the Previous Operation Outcome was "SUCCESS", write a briefing that celebrates our momentum, references the victory in the previous operation (mentioning its codename), and explains how we are pressing our tactical advantage.
    - If the Previous Operation Outcome was "FAILED", write a briefing that treats this as a critical recovery, reinforcement, or high-stakes retaliation sweep to regain control and stabilize the sector after our setback in the previous operation (mentioning its codename).
-5. No Gameplay Clashing Details & Strict Agnosticism: Do NOT invent specific named NPCs, custom coordinates, or precise base names in your final text. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean" in the narrative briefing paragraphs. Keep ground locations referred to as "outposts," "facilities," or "strongholds." You are given the Faction Giver, Category, Template Title, and Execution Scope. Treat these as dynamic blueprints to build your own immersive story-driven situations. Never copy bracket placeholders (like [TargetName] or [Location]) or dummy text literally.
+5. No Gameplay Clashing Details & Strict Agnosticism: Do NOT invent specific named NPCs, custom coordinates, or precise base names in your final text. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean" in the narrative briefing paragraphs. Keep ground locations referred to as "outposts," "facilities," or "strongholds." You are given the Category, Template Title, and Execution Scope. Treat these as dynamic blueprints to build your own immersive story-driven situations. Never copy bracket placeholders (like [TargetName] or [Location]) or dummy text literally.
 6. Complication & ROE Integration: Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the "briefing" text as a natural tactical heads-up from the intel team.
 7. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).
-8. Strict Name Agnosticism: Never refer to the user or player as "Nico" or "Captain Nico". Always refer to the user as "the Captain" or "the Commander" to maintain complete roleplay name agnosticism.`;
+8. Strict Name Agnosticism: Never refer to the user or player as "Nico" or "Captain Nico". Always refer to the user as "the Captain" or "the Commander" to maintain complete roleplay name agnosticism.
+9. Cohesive Integrated Operation (Strictly One Sponsoring Client): Treat the entire multi-phase operation as a single, unified, cohesive contract commissioned STRICTLY by the "Sponsoring Client" (the global client). Never mention any other factions, contractors, or givers for individual phases (do NOT say Phase 1 is for one group and Phase 2 is for another). All phases must flow naturally as sequential tactical sub-objectives of the primary campaign assigned by the Sponsoring Client.`;
 
             let campaignBlock = "";
             if (activeCampaign && activeCampaign.active) {
@@ -1304,7 +1305,7 @@ Follow these strict constraints for the content:
 - Sponsoring Client: "${sponsor}"
 - Threat Profile: "${threat} (${briefing.threatDetails})"
 ${campaignBlock}- Mission Flow:
-${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: Mobiglas Category: ${p.type} - Mission Template: "${p.title}" (Faction/Giver: ${p.giver}) with Tactical Execution Scope: "${p.setting}"`).join("\n")}
+${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: Mobiglas Category: ${p.type} - Mission Template: "${p.title}" with Tactical Execution Scope: "${p.setting}"`).join("\n")}
 - Complication Parameter: "${briefing.complication}"
 - Rules of Engagement: "${briefing.roe}"
 `;
