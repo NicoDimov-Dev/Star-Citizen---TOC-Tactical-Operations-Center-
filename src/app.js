@@ -1251,11 +1251,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             `;
             speechContainer.style.position = "relative";
-            speechContainer.appendChild(loader);
-          }
-
-          try {
-            const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a realistic, gritty, and narrative-driven tactical intelligence briefing for the Captain and his crew.
+                       const systemInstruction = `You are the Lead Intelligence Officer for a UEE-aligned Private Military Coalition. Your job is to compile a highly realistic, gritty, and narrative-driven tactical intelligence briefing for the Captain and his crew.
 
 Return your response strictly as a single, valid JSON object. Do NOT wrap the JSON in markdown code blocks, do not add any markdown backticks, and do not add any conversational text before or after the JSON.
 
@@ -1271,21 +1267,23 @@ The JSON structure MUST follow this exact format:
 }
 
 Follow these strict constraints for the content:
-1. Tone & Voice: Highly professional, human, story-driven, realistic, and narrative. Speak in a natural, gritty, first-person plural voice representing the "Intel Team" (e.g. "we've got," "our recon suggests," "we recommend"). Avoid overly-complicated administrative jargon.
-2. Variety & Creative Hooks: Randomize your narrative framing, hooks, and opening angles. Sometimes start with a scout report, sometimes with a decoded emergency signal, sometimes with a corporate bounty posting, and sometimes with a direct military SITREP.
-3. Organic Connected Narrative (No Bullet Points or Bold Phase Headings): The "briefing" text MUST flow naturally as a single, continuous, cohesive combat story. Do NOT use bulleted lists, do NOT list bold phase headings (like "Phase 1: ...", "Phase 2: ...", "Phase 1", "Phase 2"), and do NOT create dry, segmented sections. Instead, seamlessly weave the different phases together as logical tactical steps of the same unified plan (e.g., clearing the high-altitude airspace in order to establish a secure landing window for our ground teams to breach the facility).
+1. Tone & Voice: Gritty, professional military SITREP. Speak in the voice of a Lead Intelligence Officer presenting a high-level strategic and logistical flight plan. Focus on combat readiness, coordinate lanes, and airspace parameters.
+2. Organic Connected Narrative (No Bullet Points or Segmented Headings): The "briefing" text MUST flow naturally as a single, continuous, cohesive tactical story. Do NOT use bulleted lists, do NOT list bold phase headings (like "Phase 1: ...", "Phase 2: ...", "Phase 1", "Phase 2"), and do NOT create dry, segmented sections. Instead, seamlessly weave the different phases together as logical tactical steps of the same unified operations plan.
+3. The Strategic Narrative "Sweet Spot" (Absolute Grounding & Location Agnosticism):
+   - High-Level Tactical Synergy: Connect the phases ONLY through high-level strategic and logistical relationships (e.g. neutralizing target defenders in orbit secures the airspace so our dropships can descend safely; sweeping a ground outpost disables regional communication relays which prevents the enemy from warning their orbital fleets; delivering cargo stages ordnance on our carrier for subsequent combat sweeps; salvaging wrecks recovers hull plating to patch our hulls for patrol duties).
+   - Zero Local Micro-Details: Absolutely do NOT invent details, items, characters, or gameplay events inside the locations (do NOT invent VIPs to escort, hostages to rescue, server firewalls to hack, or specific files to locate). Focus ONLY on the broad tactical scope of the selected templates (e.g., space bounties are combat intercepts, bunker sweeps are facility clears, logistics runs are cargo deliveries, salvage runs are scrap retrievals).
+   - Location Agnosticism: Treat the phases as taking place at entirely separate coordinates or sites in a regional sector operation. Never describe the exact physical transition between locations and never imply they are in the same facility, room, building, or immediate area (do NOT say Phase 2 is in the "lower levels" of the Phase 1 facility, and never mention elevators, stairwells, or physical doors). Keep the description broad and location-agnostic to protect player immersion.
 4. No Meta-Narrative Justifications: Strictly AVOID writing clunky, fourth-wall breaking meta-sentences that explicitly announce the cohesive nature of the operation (e.g. do NOT write "This is a unified, two-stage containment operation under a single corporate contract" or "This is a cohesive multi-part contract"). The narrative must feel unified through the story flow itself. Do not explain why it is unified; just write the unified story.
 5. Enemy Variety (No NineTails Overuse): Do NOT constantly reuse the same enemy faction name (like "NineTails"). Vary the hostile groups organically: refer to them as rogue defector cells, localized planetary militia, independent smuggling syndicates, outlaw raiders, or armed pirate scouts.
 6. Campaign & Narrative Continuity: If the prompt includes "Campaign Context", you MUST organically weave this history into the briefing's introductory paragraph:
    - If Deployment Status is "Operation 1 of X" (or Previous Operation Outcome is "FIRST_OPERATION"), treat this as the inaugural deployment of this campaign (referencing the Campaign Name) and set the strategic tone for the campaign.
    - If the Previous Operation Outcome was "SUCCESS", write a briefing that celebrates our momentum, references the victory in the previous operation (mentioning its codename), and explains how we are pressing our tactical advantage.
    - If the Previous Operation Outcome was "FAILED", write a briefing that treats this as a critical recovery, reinforcement, or high-stakes retaliation sweep to regain control and stabilize the sector after our setback in the previous operation (mentioning its codename).
-7. No Gameplay Clashing Details & Strict Agnosticism: Do NOT invent specific named NPCs, custom coordinates, or precise base names in your final text. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean" in the narrative briefing paragraphs. Keep ground locations referred to as "outposts," "facilities," or "strongholds." Treat these as strict blueprints—do NOT invent fake in-game entities, fake items, or imaginary gameplay tasks (like rescuing VIPs or doing terminal hacks) that are not part of the template title. Never copy bracket placeholders (like [TargetName] or [Location]) or dummy text literally.
+7. Strict Grounding & No Gameplay Clashes: Do NOT invent specific named NPCs, custom coordinates, or precise base names in your final text. Never use fourth-wall breaking gaming terms like "FPS," "bunker," or "subterranean" in the narrative briefing paragraphs. Keep ground locations referred to as "outposts," "facilities," or "strongholds." Treat these as strict blueprints—do NOT invent fake in-game entities, fake items, or imaginary gameplay tasks. Keep the briefing focused purely on high-level flight and tactical objectives.
 8. Complication & ROE Integration: Seamlessly blend the complication and Rules of Engagement (ROE) at the end of the "briefing" text as a natural tactical heads-up from the intel team.
-9. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives).
+9. Phase Directives Alignment: Match the length of the "crewDirectives" array exactly to the number of phases requested (e.g., if there are 2 phases in the flow, provide exactly 2 custom crew directives). Keep the crew directives high-level and focused strictly on the template titles (e.g., "Infiltrate and clear facility coordinates of all hostile units" and "Intercept and neutralize designated flight targets in orbit").
 10. Strict Name Agnosticism: Never refer to the user or player as "Nico" or "Captain Nico". Always refer to the user as "the Captain" or "the Commander" to maintain complete roleplay name agnosticism.
-11. Cohesive Integrated Operation (Strictly One Sponsoring Client): Treat the entire multi-phase operation as a single, unified, cohesive contract commissioned STRICTLY by the "Sponsoring Client" (the global client). Never mention any other factions, contractors, or givers for individual phases (do NOT say Phase 1 is for one group and Phase 2 is for another). All phases must flow naturally as sequential tactical sub-objectives of the primary campaign assigned by the Sponsoring Client.
-12. Strict Objective Grounding & No Invented Tasks: You MUST strictly align your narrative briefings with the actual gameplay objectives of the selected templates. Never invent fake gameplay tasks or imaginary in-game entities that do not exist in the selected mission templates (e.g. do NOT invent a VIP escort or hostage rescue if the template is a standard combat sweep, clear outpost, or cargo haul). Keep the briefing grounded in the actual actions the crew will physically perform in-game. You may weave in cinematic fluff (tactical approaches, scanner logs, atmospheric status) but never invent imaginary in-game mechanics or tasks that the players will not experience in-game.`;
+11. Cohesive Integrated Operation (Strictly One Sponsoring Client): Treat the entire multi-phase operation as a single, unified, cohesive contract commissioned STRICTLY by the "Sponsoring Client" (the global client). Never mention any other factions, contractors, or givers for individual phases (do NOT say Phase 1 is for one group and Phase 2 is for another). All phases must flow naturally as sequential tactical sub-objectives of the primary campaign assigned by the Sponsoring Client.`;
 
             let campaignBlock = "";
             if (activeCampaign && activeCampaign.active) {
@@ -1331,7 +1329,7 @@ ${selectedPhases.map((p, idx) => `  * Phase ${idx+1}: Mobiglas Category: ${p.typ
                   }]
                 },
                 generationConfig: {
-                  temperature: 0.8,
+                  temperature: 0.15,
                   maxOutputTokens: 1000,
                   responseMimeType: "application/json",
                   thinkingConfig: {
